@@ -10,6 +10,98 @@
     <img src="assets/teaser_fastgs.png" width="800px"/>
 </p>
 
+> **📦 This fork** packages FastGS as an installable Python library that bundles **both** pipelines in one place:
+> the standard **rendering** pipeline (fast 3DGS training, from `main`) and the **surface reconstruction** pipeline
+> (**Fast-PGSR**, PGSR-based mesh extraction, from the upstream `fast-pgsr` branch). See
+> [📦 Install as a package (this fork)](#-install-as-a-package-this-fork) and
+> [🗂️ Repository layout](#️-repository-layout) below.
+
+## 🗂️ Repository layout
+
+```
+FastGS/
+├── pyproject.toml             # installable package metadata (uv / pip)
+├── src/fastgs/                # the importable library
+│   ├── rendering/             # FastGS: fast 3DGS training / rendering  (from main)
+│   │   ├── scene/ gaussian_renderer/ utils/ arguments/ lpipsPyTorch/
+│   │   ├── trainer.py         # training(...)        (programmatic API)
+│   │   └── renderer.py        # render_sets(...)
+│   └── surface/               # Fast-PGSR: surface reconstruction / mesh  (from fast-pgsr)
+│       ├── scene/ (incl. app_model.py) gaussian_renderer/ utils/ arguments/ lpipsPyTorch/
+│       ├── trainer.py         # training(...)
+│       └── mesh.py            # render_sets(...) + TSDF fusion / mesh post-processing
+├── scripts/                   # in-repo CLIs / experiments (not part of the package)
+│   ├── rendering/             # train.py, render.py, metrics.py, full_eval.py, convert.py, train_*.sh
+│   └── surface/               # train.py, render.py, metrics.py, full_eval.py, visual.py,
+│                              #   preprocess/, tnt_eval/, render_tnt.py, run_tnt.py
+└── third_party/               # vendored CUDA extensions (each has its own setup.py)
+    ├── diff-gaussian-rasterization_fastgs/   # rasterizer (both pipelines)
+    ├── diff-plane-rasterization/             # plane rasterizer (surface only)
+    ├── fused-ssim/
+    └── simple-knn/
+```
+
+The two pipelines share a FastGS lineage but their core code (`gaussian_model.py`, `train.py`,
+`gaussian_renderer`, …) has diverged, so they live side by side as `fastgs.rendering` and
+`fastgs.surface` rather than being force-merged.
+
+## 📦 Install as a package (this fork)
+
+### Prerequisites (required for the CUDA extensions)
+The four extensions in `third_party/` are compiled against **your** PyTorch / CUDA toolchain, so:
+
+- Install a CUDA-enabled **PyTorch** that matches your CUDA toolkit **first**.
+- A CUDA toolkit with **`nvcc`** must be on `PATH`.
+- Because the extensions need torch at build time, install with **build isolation disabled**.
+- With build isolation disabled, the build environment must also provide
+  **`setuptools`, `wheel`, `ninja`** (install them alongside torch before building).
+- `nvcc` needs a **compatible host C/C++ compiler**. If your default `gcc`/`g++` is too new
+  (or incomplete), point `nvcc` at a supported one, e.g. `export CC=gcc-12 CXX=g++-12`.
+
+### Use it from another project (`uv add`)
+```bash
+# torch + nvcc must already be available in the target environment
+uv add "fastgs @ git+https://github.com/makolon/FastGS.git" --no-build-isolation
+# surface reconstruction also needs PyTorch3D (often installed separately, e.g. via conda):
+uv add "fastgs[surface] @ git+https://github.com/makolon/FastGS.git" --no-build-isolation
+```
+The four CUDA extensions are declared as direct git sub-directory dependencies, so they are pulled
+and built automatically — no extra source entries are needed in your project.
+
+> If your resolver re-builds with isolation, add to your project's `pyproject.toml`:
+> ```toml
+> [tool.uv]
+> no-build-isolation-package = [
+>   "diff_gaussian_rasterization_fastgs", "diff_plane_rasterization", "fused_ssim", "simple_knn",
+> ]
+> ```
+
+### Develop in this repo
+```bash
+git clone https://github.com/makolon/FastGS.git
+cd FastGS
+uv sync --no-build-isolation          # builds the 4 extensions from local third_party/
+# or, without uv:  pip install -e . --no-build-isolation
+```
+
+### Programmatic API
+```python
+from fastgs.rendering import training as train_render      # fast 3DGS training
+from fastgs.rendering import render_sets                    # render a trained model
+from fastgs.surface  import training as train_surface       # Fast-PGSR training
+from fastgs.surface  import render_sets as extract_mesh     # TSDF fusion -> mesh.ply
+```
+
+### Run the in-repo scripts
+```bash
+# rendering (FastGS)
+python scripts/rendering/train.py  -s <dataset> -m <output>
+python scripts/rendering/render.py -m <output>
+# surface reconstruction (Fast-PGSR)
+python scripts/surface/train.py    -s <dataset> -m <output>
+python scripts/surface/render.py   -m <output>            # writes mesh/tsdf_fusion[_post].ply
+```
+
 ## 🚀 What Makes FastGS Special?
 
 FastGS is a **general acceleration framework** that supercharges 3D Gaussian Splatting training while maintaining Comparable rendering quality. Our method stands out with:

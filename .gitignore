@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+.eggs/
+build/
+dist/
+develop-eggs/
+.installed.cfg
+pip-wheel-metadata/
+
+# Packaging / uv / venv
+.venv/
+venv/
+env/
+uv.lock
+*.so
+
+# PyTorch / training artifacts
+output/
+outputs/
+*.pth
+*.ckpt
+tensorboard/
+events.out.tfevents.*
+
+# Datasets (do not commit large data)
+datasets/
+data/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp

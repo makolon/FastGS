@@ -14,6 +14,11 @@ dependencies:
   - tqdm
   - websockets
   - pip:
-    - submodules/diff-gaussian-rasterization_fastgs
-    - submodules/simple-knn
-    - submodules/fused-ssim
+    # CUDA extensions (consolidated under third_party/). This conda env targets the
+    # rendering (FastGS) pipeline. After creating the env, install the package itself
+    # with:  pip install -e . --no-deps
+    # For the surface (Fast-PGSR) pipeline also build third_party/diff-plane-rasterization
+    # and install pytorch3d + trimesh + open3d + opencv-python (see README).
+    - third_party/diff-gaussian-rasterization_fastgs
+    - third_party/simple-knn
+    - third_party/fused-ssim
