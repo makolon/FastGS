@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fastgs"
+version = "0.1.0"
+description = "FastGS: Training 3D Gaussian Splatting in 100 Seconds — rendering (FastGS) + surface reconstruction (Fast-PGSR)."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Shiwei Ren" },
+]
+keywords = ["gaussian-splatting", "3dgs", "surface-reconstruction", "pgsr", "nerf"]
+
+# NOTE on PyTorch: we deliberately do NOT pin a torch version. The CUDA
+# extensions below are compiled against whatever torch/CUDA toolchain is present
+# in the target environment, so torch must be installed beforehand and the build
+# must run with build isolation disabled (see README).
+dependencies = [
+    "numpy",
+    "torch",
+    "torchvision",
+    "Pillow",
+    "plyfile",
+    "tqdm",
+    "opencv-python",
+    "open3d",
+    "websockets",
+    # CUDA extensions, built from subdirectories of this same repository.
+    # Direct (PEP 508) URLs are used so they are resolved *transitively* when a
+    # downstream project depends on `fastgs` (uv does not propagate
+    # [tool.uv.sources] across dependencies).
+    "diff_gaussian_rasterization_fastgs @ git+https://github.com/makolon/FastGS.git#subdirectory=third_party/diff-gaussian-rasterization_fastgs",
+    "diff_plane_rasterization @ git+https://github.com/makolon/FastGS.git#subdirectory=third_party/diff-plane-rasterization",
+    "fused_ssim @ git+https://github.com/makolon/FastGS.git#subdirectory=third_party/fused-ssim",
+    "simple_knn @ git+https://github.com/makolon/FastGS.git#subdirectory=third_party/simple-knn",
+]
+
+[project.optional-dependencies]
+# The surface-reconstruction (Fast-PGSR) pipeline additionally requires PyTorch3D,
+# which usually has to be installed against your exact torch/CUDA build (often via
+# conda or a prebuilt wheel). See the README for guidance.
+surface = ["pytorch3d", "trimesh"]
+
+[project.urls]
+Homepage = "https://fastgs.github.io/"
+Repository = "https://github.com/makolon/FastGS"
+Paper = "https://arxiv.org/abs/2511.04283"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["fastgs*"]
+
+# Local development overrides: when building *this* repository (e.g. `uv sync`),
+# build the CUDA extensions from the local `third_party/` tree instead of cloning
+# the git URLs above. Downstream consumers ignore this table and use the git URLs.
+[tool.uv.sources]
+diff_gaussian_rasterization_fastgs = { path = "third_party/diff-gaussian-rasterization_fastgs", editable = false }
+diff_plane_rasterization = { path = "third_party/diff-plane-rasterization", editable = false }
+fused_ssim = { path = "third_party/fused-ssim", editable = false }
+simple_knn = { path = "third_party/simple-knn", editable = false }
