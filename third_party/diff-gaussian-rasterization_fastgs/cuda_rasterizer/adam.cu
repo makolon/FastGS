@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "auxiliary.h"
 #include "adam.h"
 #include <cooperative_groups.h>

@@ -9,6 +9,7 @@
  * For inquiries contact  george.drettakis@inria.fr
  */
 
+#include <cstdint>
 #include "rasterizer_impl.h"
 #include <iostream>
 #include <fstream>

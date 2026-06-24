@@ -9,6 +9,7 @@
  * For inquiries contact  george.drettakis@inria.fr
  */
 
+#include <cstdint>
 #include <math.h>
 #include <torch/extension.h>
 #include <cstdio>

@@ -1,5 +1,6 @@
 #ifndef CUDA_RASTERIZER_ADAM_H_INCLUDED
 #define CUDA_RASTERIZER_ADAM_H_INCLUDED
+#include <cstdint>
 
 #include <cuda.h>
 #include "cuda_runtime.h"
